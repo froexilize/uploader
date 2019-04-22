@@ -39,7 +39,7 @@ def api_get_counters():
             user_data=c.binary
         )
 
-@app.route('/api/test', methods=['GET'])
+@app.route('/api/get_penalties', methods=['GET'])
 def api_test():
     if request.method == 'GET':
         root_dir = './tars'
@@ -52,20 +52,27 @@ def api_test():
                 jsons.append(json.dumps(data, sort_keys=False, indent=4))
     return json.dumps(jsons, sort_keys=False, indent=4)
 
-@app.route('/api/get_penalties', methods=['GET'])
-def api_get_penalties():
-    if request.method == 'GET':
-        return jsonify(
-            penalty_data = "data blablabla"
-        )
-
 @app.route('/api/get_penalty', methods=['GET'])
 def api_get_penalty():
     if request.method == 'GET':
-        id = request.args.get('id')
-        return jsonify(
-            id = id
-        )
+        id = int(request.args.get('id'))
+        root_dir = './tars'
+        tars_path = []
+        counter = int(0)
+        for r,d,f in os.walk(root_dir):
+            for folder in d:
+                if counter == id:
+                    json_file = os.path.join(r, folder, "prizma.json")
+                    image_file = os.path.join(r, folder, "m.jpg")
+                    with open(json_file, encoding='utf-8') as f:
+                        json_data = json.load(f)
+                    image_data = open(image_file)
+                    return jsonify(prizma = json_data)
+                counter = counter + 1
+    return jsonify(
+        error_code = -1,
+        error_msg = "Not found"
+    )
 
 if __name__ == '__main__':
     app.config['JSON_AS_ASCII'] = False
