@@ -67,7 +67,7 @@ def api_get_penalty():
                     with open(json_file, encoding='utf-8') as f:
                         json_data = json.load(f)
                     image_data = open(image_file)
-                    return jsonify(prizma = json_data)
+                    return json.dumps(json_data, sort_keys=False, indent=4)
                 counter = counter + 1
     return jsonify(
         error_code = -1,
