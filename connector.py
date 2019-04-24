@@ -24,6 +24,19 @@ def api_call():
 <h1>API call</h1>
 '''
 
+
+def imageToJson(path:str)
+    import base64
+    buffer = None
+    with(open(path, 'rb')) as file:
+        buffer = base64.b64encode(file.read())
+        file.close()
+                    
+    b64buffer = {'b64': binary.decode('ascii')}
+    return b64buffer
+
+
+
 @app.route('/api/get_counters', methods=['GET'])
 def api_get_counters():
     if request.method == 'GET':
@@ -64,9 +77,13 @@ def api_get_penalty():
                 if counter == id:
                     json_file = os.path.join(r, folder, "prizma.json")
                     image_file = os.path.join(r, folder, "m.jpg")
+                    
+                    #encoded base64 str
+                    b64str = imageToJson(path=image_file)
+              
                     with open(json_file, encoding='utf-8') as f:
                         json_data = json.load(f)
-                    image_data = open(image_file)
+                    json_data['picture'] = b64str
                     return json.dumps(json_data, sort_keys=False, indent=4)
                 counter = counter + 1
     return jsonify(
