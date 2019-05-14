@@ -4,12 +4,17 @@ from threading import Thread
 from flask import Flask, request, redirect, url_for, jsonify, json
 from werkzeug.utils import secure_filename
 import zeroPy
+from flask_redis import FlaskRedis
 
 UPLOAD_FOLDER = '/Users/boris.dergachov/Uploads'
 ALLOWED_EXTENSIONS = set(['tar'])
 
 app = Flask(__name__)
+redis_store = FlaskRedis(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['REDIS_HOST'] = 'localhost'
+app.config['REDIS_PORT'] = 6379
+app.config['REDIS_DB'] = 0
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -24,8 +29,16 @@ def api_call():
 <h1>API call</h1>
 '''
 
+@app.route('/redis_test/', methods=['GET'])
+def index():
+    redis_store.set('potato', 'Don\'t fuck me')
+    response = redis_store.get('potato')
+    if response == None:
+        return 'Fuck!'
+    return response
 
-def imageToJson(path:str)
+
+def imageToJson(path: str):
     import base64
     buffer = None
     with(open(path, 'rb')) as file:
