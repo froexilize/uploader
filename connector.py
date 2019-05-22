@@ -1,9 +1,5 @@
 import os
-import time
-from threading import Thread
-from flask import Flask, request, redirect, url_for, jsonify, json
-from werkzeug.utils import secure_filename
-import zeroPy
+from flask import Flask, request, jsonify, json
 from flask_redis import FlaskRedis
 
 UPLOAD_FOLDER = '/Users/boris.dergachov/Uploads'
@@ -37,12 +33,11 @@ def api_get_jsons():
     jsons = list()
     for key, value in response[1].items():
         key = key.decode('utf-8')
-        value = value.decode('utf-8')
+        value = json.loads(value.decode('utf-8'))
         jsons.append({
             'uid' : key,
             'json' : value
         })
-    print(jsons)
     return json.dumps(jsons, sort_keys=False, indent=4)
 
 
