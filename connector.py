@@ -17,33 +17,33 @@ app.config['REDIS_PORT'] = 6379
 app.config['REDIS_DB'] = 0
 
 
+serials_cache = set()
+
+
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
-@app.route('/api/', methods=['GET'])
-def api_call():
-    if request.method == 'GET':
-        return '''
-<!doctype html>
-<title>API call</title>
-<h1>API call</h1>
-'''
-
-
-@app.route('/redis_test/', methods=['GET'])
-def index():
-    response = redis_store.get('potato')
-    if response is None:
-        return 'Fuck!'
-    return response
+@app.route('/api/test')
+def api_test():
+    return jsonify(serials_cache)
 
 
 @app.route('/api/get_jsons', methods=['GET'])
 def api_get_jsons():
     response = redis_store.hscan('uid_to_json', cursor=0)
-    return json.dumps(response[1], sort_keys=False, indent=4)
+    print(len(response[1]))
+    jsons = list()
+    for key, value in response[1].items():
+        key = key.decode('utf-8')
+        value = value.decode('utf-8')
+        jsons.append({
+            'uid' : key,
+            'json' : value
+        })
+    print(jsons)
+    return json.dumps(jsons, sort_keys=False, indent=4)
 
 
 @app.route('/api/uid_to_json', methods=['GET'])
@@ -61,6 +61,17 @@ def api_uid_to_json():
             error_msg = "uid not found in cache"
         )
     return json.dumps(response[1], sort_keys=False, indent=4)
+
+
+@app.route('/api/serial_to_uid', methods=['GET'])
+def api_serial_to_uid():
+    serial = request.args.get('serial')
+    if serial is None:
+        return jsonify (
+            error_code = -1,
+            error_msg = "No serial arg"
+        )
+    return "{}"
 
 
 def imageToJson(path: str):
@@ -90,7 +101,7 @@ def api_get_counters():
 
 
 @app.route('/api/get_penalties', methods=['GET'])
-def api_test():
+def api_get_penalties():
     if request.method == 'GET':
         root_dir = './tars'
         jsons = []
@@ -127,6 +138,7 @@ def api_get_penalty():
         error_msg="Not found"
     )
 
+
 if __name__ == '__main__':
     app.config['JSON_AS_ASCII'] = False
-    app.run(host="127.0.0.1");
+    app.run(host="10.0.0.61");
