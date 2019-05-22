@@ -39,10 +39,29 @@ def index():
         return 'Fuck!'
     return response
 
+
 @app.route('/api/get_jsons', methods=['GET'])
 def api_get_jsons():
     response = redis_store.hscan('uid_to_json', cursor=0)
     return json.dumps(response[1], sort_keys=False, indent=4)
+
+
+@app.route('/api/uid_to_json', methods=['GET'])
+def api_uid_to_json():
+    uid = request.args.get('uid')
+    if uid is None:
+        return jsonify (
+            error_code = -1,
+            error_msg = "No uid arg"
+        )
+    response = redis_store.hscan('uid_to_json', cursor=0, match=uid)
+    if len(response[1]) == 0:
+        return jsonify (
+            error_code = -1,
+            error_msg = "uid not found in cache"
+        )
+    return json.dumps(response[1], sort_keys=False, indent=4)
+
 
 def imageToJson(path: str):
     import base64
