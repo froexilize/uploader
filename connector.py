@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify, json
+from flask import Flask, request, jsonify, json, send_file
 from flask_redis import FlaskRedis
 
 UPLOAD_FOLDER = '/Users/boris.dergachov/Uploads'
@@ -16,27 +16,55 @@ app.config['REDIS_DB'] = 0
 serials_cache = set()
 
 
+def imageToJson(path: str):
+    import base64
+    buffer = None
+    with(open(path, 'rb')) as file:
+        buffer = base64.b64encode(file.read())
+        file.close()
+    b64buffer = {'b64': buffer.decode('ascii')}
+    return b64buffer
+
+
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
-@app.route('/api/test')
-def api_test():
-    return jsonify(serials_cache)
+@app.route('/storage/get_m', methods=['GET'])
+def storage_get_m():
+    img_path = request.args.get('path_uid')
+    # TODO: return placeholder if image not found
+    # if img_path is None:
+    #     return
+    filename = 'tars/' + img_path + '/m.jpg'
+    print(filename)
+    return send_file(filename, mimetype='image/jpg')
+
+
+def api_uid_to_img_id(img_id : str):
+    if img_id is None:
+        return str()
+    response = redis_store.hscan('uid_to_img_id', cursor=0, match=img_id)
+    print('== [response] ==')
+    if (len(response[1]) == 0):
+        return str()
+    for key, value in response[1].items():
+        return value
 
 
 @app.route('/api/get_jsons', methods=['GET'])
 def api_get_jsons():
     response = redis_store.hscan('uid_to_json', cursor=0)
-    print(len(response[1]))
     jsons = list()
     for key, value in response[1].items():
         key = key.decode('utf-8')
         value = json.loads(value.decode('utf-8'))
+        img_id = api_uid_to_img_id(key).decode('utf-8')
         jsons.append({
             'uid' : key,
-            'json' : value
+            'json' : value,
+            'm' : img_id
         })
     return json.dumps(jsons, sort_keys=False, indent=4)
 
@@ -67,16 +95,6 @@ def api_serial_to_uid():
             error_msg = "No serial arg"
         )
     return "{}"
-
-
-def imageToJson(path: str):
-    import base64
-    buffer = None
-    with(open(path, 'rb')) as file:
-        buffer = base64.b64encode(file.read())
-        file.close()
-    b64buffer = {'b64': binary.decode('ascii')}
-    return b64buffer
 
 
 @app.route('/api/get_counters', methods=['GET'])
