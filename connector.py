@@ -38,7 +38,6 @@ def storage_get_m():
     # if img_path is None:
     #     return
     filename = 'tars/' + img_path + '/m.jpg'
-    print(filename)
     return send_file(filename, mimetype='image/jpg')
 
 
@@ -46,7 +45,6 @@ def api_uid_to_img_id(img_id : str):
     if img_id is None:
         return str()
     response = redis_store.hscan('uid_to_img_id', cursor=0, match=img_id)
-    print('== [response] ==')
     if (len(response[1]) == 0):
         return str()
     for key, value in response[1].items():
